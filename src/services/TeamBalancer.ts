@@ -45,7 +45,7 @@ export class TeamBalancer {
         //starts with 95% balancing confiability
         //change the biggest MMR in radiant with lowest mmr in dire
         // test the balancing confiability, if minor of 95% do the change more 4 times
-        // each 5 times, we decrease the balancing confiability in 95% to avoid infinite tryings
+        // each 5 times, we decrease the balancing confiability in 5% to avoid infinite tryings
         // log all steps
     }
 
