@@ -2,15 +2,15 @@ import { Player } from "./models/Player";
 import { TeamBalancer } from "./services/TeamBalancer";
 
 const players = new Array<Player>(
-    new Player("Alice", 1700),
-    new Player("Bob", 1800),
-    new Player("Charlie", 1900),
-    new Player("David", 2000),
-    new Player("Eve", 2100),
-    new Player("Frank", 2200),
-    new Player("Grace", 2300),
-    new Player("Helen", 2400),
-    new Player("Ivy", 2500),
-    new Player("Jack", 2600)
+    new Player("Diogo", 4200),
+    new Player("Lucas", 2100),
+    new Player("Bernardo", 2300),
+    new Player("Gaah", 2500),
+    new Player("Fake", 4000),
+    new Player("Lele", 2000),
+    new Player("Yuyu", 3000),
+    new Player("Careca", 1200),
+    new Player("Marquim", 4000),
+    new Player("Jean", 3000)
 );
 TeamBalancer.getInstance(players).balance();
