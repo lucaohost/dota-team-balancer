@@ -29,24 +29,65 @@ export class TeamBalancer {
         this.players = players;
     }
 
-    private randomTeams(): void {
-        console.log("Randomizing teams.");
-        //clean dire
-        //clean radiant
-        //randomize 2 teams with 5 players each, saving in radiant and dire
-        // use arrow function foreach, something like that, I dont remember
-        Math.floor(Math.random() * 11);
+    private shuffleTeams(): void {
+        console.log("Shuffling teams.");
+        for (let i = 0; i < 100; i++) {
+            let randomPositionOne: number = Math.floor(Math.random() * 11);
+            let randomPositionTwo: number = Math.floor(Math.random() * 11);
+            let auxPlayer: Player = this.players[randomPositionOne];
+            this.players[randomPositionOne] = this.players[randomPositionTwo];
+            this.players[randomPositionTwo] = auxPlayer;
+        }
+        this.radiant = this.players.slice(0, 4);
+        this.radiant = this.players.slice(5);
+    }
 
+    private cleanTeams() {
+        console.log("Cleaning teams.");
+        this.radiant = new Array<Player>();
+        this.dire = new Array<Player>();
     }
 
 
     public balance(): void {
-        this.randomTeams();
-        //starts with 95% balancing confiability
-        //change the biggest MMR in radiant with lowest mmr in dire
-        // test the balancing confiability, if minor of 95% do the change more 4 times
-        // each 5 times, we decrease the balancing confiability in 5% to avoid infinite tryings
-        // log all steps
+        this.cleanTeams();
+        this.shuffleTeams();
+        this.printCurrentResult();
+        // calculate mmr difference and print it with teams combination
+        // change biggest mmr of each side
+        // calculate mmr difference and print it with teams combination
+        // change second biggest mmr of each side
+        // calculate mmr difference and print it with teams combination
+        // change third biggest mmr of each side
+        // calculate mmr difference and print it with teams combination
+        // change fourth biggest mmr of each side
+        // calculate mmr difference and print it with teams combination
+        // change fifth biggest mmr of each side
+        // calculate mmr difference and print it with teams combination
+        // change 2 biggest mmr of each side
+        // calculate mmr difference and print it with teams combination
+        // change 3 biggest mmr of each side
+        // calculate mmr difference and print it with teams combination
+        // change 4 biggest mmr of each side
+        // calculate mmr difference and print it with teams combination
+    }
+
+    private calculateMmrDiff(): number {
+        return Math.abs(this.calculateTeamMmr(this.radiant) - this.calculateTeamMmr(this.dire));
+    }
+
+    private calculateTeamMmr(team: Array<Player>) {
+        let totalTeamMmr: number = 0;
+        team.forEach((player: Player) => {
+            totalTeamMmr += player.getMmr();
+        });
+        return totalTeamMmr;
+    }
+
+    private printCurrentResult(): void {
+        console.log("******************************")
+        console.log("Radiant: ", this.radiant, " Dire: ", this.dire, " MMR Difference: ", this.calculateMmrDiff());
+        console.log("******************************")
     }
 
 
