@@ -29,17 +29,24 @@ export class TeamBalancer {
         this.players = players;
     }
 
-    private shuffleTeams(): void {
-        console.log("Shuffling teams.");
-        for (let i = 0; i < 100; i++) {
-            let randomPositionOne: number = Math.floor(Math.random() * 11);
-            let randomPositionTwo: number = Math.floor(Math.random() * 11);
-            let auxPlayer: Player = this.players[randomPositionOne];
-            this.players[randomPositionOne] = this.players[randomPositionTwo];
-            this.players[randomPositionTwo] = auxPlayer;
-        }
-        this.radiant = this.players.slice(0, 4);
-        this.radiant = this.players.slice(5);
+    public balance(): void {
+        this.startTeams();
+        this.changePlayersAndRevert(4);
+        this.changePlayersAndRevert(3);
+        this.changePlayersAndRevert(2);
+        this.changePlayersAndRevert(1);
+        this.changePlayersAndRevert(0);
+        this.changePlayers(4);
+        this.changePlayers(3);
+        this.changePlayers(2);
+        this.changePlayers(1);
+    }
+
+    private startTeams() {
+        this.cleanTeams();
+        this.shuffleTeams();
+        this.sortPlayersByMmr();
+        this.printCurrentResult();
     }
 
     private cleanTeams() {
@@ -48,28 +55,27 @@ export class TeamBalancer {
         this.dire = new Array<Player>();
     }
 
+    private shuffleTeams(): void {
+        console.log("Shuffling teams.");
+        for (let i = 0; i < 100; i++) {
+            let randomPositionOne: number = Math.floor(Math.random() * 10);
+            let randomPositionTwo: number = Math.floor(Math.random() * 10);
+            let auxPlayer: Player = this.players[randomPositionOne];
+            this.players[randomPositionOne] = this.players[randomPositionTwo];
+            this.players[randomPositionTwo] = auxPlayer;
+        }
+        this.radiant = this.players.slice(0, 5);
+        this.dire = this.players.slice(5);
+    }
 
-    public balance(): void {
-        this.cleanTeams();
-        this.shuffleTeams();
-        this.printCurrentResult();
-        // calculate mmr difference and print it with teams combination
-        // change biggest mmr of each side
-        // calculate mmr difference and print it with teams combination
-        // change second biggest mmr of each side
-        // calculate mmr difference and print it with teams combination
-        // change third biggest mmr of each side
-        // calculate mmr difference and print it with teams combination
-        // change fourth biggest mmr of each side
-        // calculate mmr difference and print it with teams combination
-        // change fifth biggest mmr of each side
-        // calculate mmr difference and print it with teams combination
-        // change 2 biggest mmr of each side
-        // calculate mmr difference and print it with teams combination
-        // change 3 biggest mmr of each side
-        // calculate mmr difference and print it with teams combination
-        // change 4 biggest mmr of each side
-        // calculate mmr difference and print it with teams combination
+    private sortPlayersByMmr(): void {
+        this.radiant.sort((playerOne, playerTwo) => playerOne.getMmr() - playerTwo.getMmr());
+        this.dire.sort((playerOne, playerTwo) => playerOne.getMmr() - playerTwo.getMmr());
+    }
+
+    private printCurrentResult(): void {
+        console.log("******************************")
+        console.log("Radiant: ", this.radiant, " Dire: ", this.dire, " MMR Difference: ", this.calculateMmrDiff());
     }
 
     private calculateMmrDiff(): number {
@@ -84,11 +90,22 @@ export class TeamBalancer {
         return totalTeamMmr;
     }
 
-    private printCurrentResult(): void {
-        console.log("******************************")
-        console.log("Radiant: ", this.radiant, " Dire: ", this.dire, " MMR Difference: ", this.calculateMmrDiff());
-        console.log("******************************")
+    private changePlayersAndRevert(position: number) {
+        this.changePlayers(position, true);
     }
 
+    private changePlayers(position: number, revertAtEnd: boolean = false): void {
+        const aux: Player = this.radiant[position];
+        this.radiant[position] = this.dire[position];
+        this.dire[position] = aux;
+        this.printCurrentResult();
+        if (revertAtEnd) {
+            this.revertChangedPlayer(position);
+        }
+    }
+
+    private revertChangedPlayer(position: number): void {
+        this.changePlayers(position);
+    }
 
 }
