@@ -31,15 +31,12 @@ export class TeamBalancer {
 
     public balance(): void {
         this.startTeams();
-        this.changePlayersAndRevert(4);
-        this.changePlayersAndRevert(3);
-        this.changePlayersAndRevert(2);
-        this.changePlayersAndRevert(1);
-        this.changePlayersAndRevert(0);
-        this.changePlayers(4);
-        this.changePlayers(3);
-        this.changePlayers(2);
-        this.changePlayers(1);
+        for (let i: number = 0; i < 5; i++) {
+            this.changePlayersAndRevert(i);
+        }
+        for (let i: number = 0; i < 5; i++) {
+            this.changePlayers(i);
+        }
     }
 
     private startTeams() {
