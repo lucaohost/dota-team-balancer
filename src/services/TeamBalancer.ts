@@ -80,9 +80,9 @@ export class TeamBalancer {
     }
 
     private changePlayers(position: number, revertAtEnd: boolean = false): void {
-        const aux: Player = this.radiant[position];
-        this.radiant[position] = this.dire[position];
-        this.dire[position] = aux;
+        const aux: Player = this.radiant.getPlayer(position);
+        this.radiant.setPlayer(position, this.dire.getPlayer(position));
+        this.dire.setPlayer(position, aux);
         this.printCurrentResult();
         if (revertAtEnd) {
             this.revertChangedPlayer(position);

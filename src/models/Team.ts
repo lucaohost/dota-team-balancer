@@ -4,6 +4,18 @@ export class Team {
 
     private players: Array<Player> = new Array<Player>();
 
+    public getPlayers(): Array<Player> {
+        return this.players;
+    }
+
+    public getPlayer(position: number): Player {
+        return this.players[position];
+    }
+
+    public setPlayer(position: number, player: Player): void {
+        this.players[position] = player;
+    }
+
     public setPlayers(players: Array<Player>): void {
         if (players.length !== 5) {
             throw new Error("The teams need to have 5 players.");
