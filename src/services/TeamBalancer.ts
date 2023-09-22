@@ -68,7 +68,7 @@ export class TeamBalancer {
 
     private printCurrentResult(): void {
         console.log("******************************")
-        console.log("Radiant: ", this.radiant, " Dire: ", this.dire, " MMR Difference: ", this.calculateMmrDiff());
+        console.log("Radiant: ", this.radiant.getPlayers(), " Dire: ", this.dire.getPlayers(), " MMR Difference: ", this.calculateMmrDiff());
     }
 
     private calculateMmrDiff(): number {
