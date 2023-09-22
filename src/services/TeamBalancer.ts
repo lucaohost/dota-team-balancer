@@ -1,4 +1,5 @@
 import { Player } from "../models/Player";
+import { Team } from "../models/Team";
 
 export class TeamBalancer {
 
@@ -6,9 +7,9 @@ export class TeamBalancer {
 
     private players: Array<Player> = new Array<Player>();
 
-    private radiant: Array<Player> = new Array<Player>();
+    private radiant: Team;
 
-    private dire: Array<Player> = new Array<Player>();
+    private dire: Team;
 
 
     private constructor(players?: Array<Player>) {
@@ -31,30 +32,22 @@ export class TeamBalancer {
 
     public balance(): void {
         this.startTeams();
-        this.changePlayersAndRevert(4);
-        this.changePlayersAndRevert(3);
-        this.changePlayersAndRevert(2);
-        this.changePlayersAndRevert(1);
-        this.changePlayersAndRevert(0);
-        this.changePlayers(4);
-        this.changePlayers(3);
-        this.changePlayers(2);
-        this.changePlayers(1);
+        for (let i: number = 0; i < 5; i++) {
+            this.changePlayersAndRevert(i);
+        }
+        for (let i: number = 0; i < 5; i++) {
+            this.changePlayers(i);
+        }
     }
 
     private startTeams() {
-        this.cleanTeams();
+        console.log("Creating teams.");
+        this.radiant = new Team();
+        this.dire = new Team();
         this.shuffleTeams();
         this.sortPlayersByMmr();
         this.printCurrentResult();
     }
-
-    private cleanTeams() {
-        console.log("Cleaning teams.");
-        this.radiant = new Array<Player>();
-        this.dire = new Array<Player>();
-    }
-
     private shuffleTeams(): void {
         console.log("Shuffling teams.");
         for (let i = 0; i < 100; i++) {
@@ -64,13 +57,13 @@ export class TeamBalancer {
             this.players[randomPositionOne] = this.players[randomPositionTwo];
             this.players[randomPositionTwo] = auxPlayer;
         }
-        this.radiant = this.players.slice(0, 5);
-        this.dire = this.players.slice(5);
+        this.radiant.setPlayers(this.players.slice(0, 5));
+        this.dire.setPlayers(this.players.slice(0, 5));
     }
 
     private sortPlayersByMmr(): void {
-        this.radiant.sort((playerOne, playerTwo) => playerOne.getMmr() - playerTwo.getMmr());
-        this.dire.sort((playerOne, playerTwo) => playerOne.getMmr() - playerTwo.getMmr());
+        this.radiant.sortPlayers();
+        this.dire.sortPlayers();
     }
 
     private printCurrentResult(): void {
@@ -79,15 +72,7 @@ export class TeamBalancer {
     }
 
     private calculateMmrDiff(): number {
-        return Math.abs(this.calculateTeamMmr(this.radiant) - this.calculateTeamMmr(this.dire));
-    }
-
-    private calculateTeamMmr(team: Array<Player>) {
-        let totalTeamMmr: number = 0;
-        team.forEach((player: Player) => {
-            totalTeamMmr += player.getMmr();
-        });
-        return totalTeamMmr;
+        return Math.abs(this.radiant.calculateTeamMmr() - this.dire.calculateTeamMmr());
     }
 
     private changePlayersAndRevert(position: number) {
@@ -95,9 +80,9 @@ export class TeamBalancer {
     }
 
     private changePlayers(position: number, revertAtEnd: boolean = false): void {
-        const aux: Player = this.radiant[position];
-        this.radiant[position] = this.dire[position];
-        this.dire[position] = aux;
+        const aux: Player = this.radiant.getPlayer(position);
+        this.radiant.setPlayer(position, this.dire.getPlayer(position));
+        this.dire.setPlayer(position, aux);
         this.printCurrentResult();
         if (revertAtEnd) {
             this.revertChangedPlayer(position);
