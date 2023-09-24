@@ -35,7 +35,7 @@ export class TeamBalancer {
         for (let i: number = 0; i < 5; i++) {
             this.changePlayersAndRevert(i);
         }
-        for (let i: number = 0; i < 5; i++) {
+        for (let i: number = 0; i < 4; i++) {
             this.changePlayers(i);
         }
     }
@@ -58,7 +58,7 @@ export class TeamBalancer {
             this.players[randomPositionTwo] = auxPlayer;
         }
         this.radiant.setPlayers(this.players.slice(0, 5));
-        this.dire.setPlayers(this.players.slice(0, 5));
+        this.dire.setPlayers(this.players.slice(5));
     }
 
     private sortPlayersByMmr(): void {
@@ -81,6 +81,7 @@ export class TeamBalancer {
 
     private changePlayers(position: number, revertAtEnd: boolean = false): void {
         const aux: Player = this.radiant.getPlayer(position);
+        console.log("Trocando Player ", aux, " pelo Player ", this.dire.getPlayer(position));
         this.radiant.setPlayer(position, this.dire.getPlayer(position));
         this.dire.setPlayer(position, aux);
         this.printCurrentResult();
@@ -90,6 +91,7 @@ export class TeamBalancer {
     }
 
     private revertChangedPlayer(position: number): void {
+        console.log("Revertendo troca");
         this.changePlayers(position);
     }
 
