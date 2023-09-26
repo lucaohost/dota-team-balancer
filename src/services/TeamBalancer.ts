@@ -42,7 +42,7 @@ export class TeamBalancer {
         for (let i: number = 0; i < 4; i++) {
             this.changePlayers(i);
         }
-        this.printCurrentResult();
+        this.printResult();
     }
 
     private startTeams() {
@@ -56,7 +56,7 @@ export class TeamBalancer {
     }
     private shuffleTeams(): void {
         console.log("Shuffling teams.");
-        for (let i = 0; i < 100000; i++) {
+        for (let i = 0; i < 1000; i++) {
             let randomPositionOne: number = Math.floor(Math.random() * 10);
             let randomPositionTwo: number = Math.floor(Math.random() * 10);
             let auxPlayer: Player = this.players[randomPositionOne];
@@ -72,7 +72,7 @@ export class TeamBalancer {
         this.dire.sortPlayers();
     }
 
-    private printCurrentResult(): void {
+    private printResult(): void {
         console.log("******************************")
         console.log("Radiant: ", this.bestMatchup.slice(0, 5), " Dire: ", this.bestMatchup.slice(5), " MMR Difference: ", this.bestMmrDifference);
     }
