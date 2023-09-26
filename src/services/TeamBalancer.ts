@@ -5,11 +5,15 @@ export class TeamBalancer {
 
     private static instance: TeamBalancer;
 
-    private players: Array<Player> = new Array<Player>();
+    private players: Array<Player> = [];
 
     private radiant: Team;
 
     private dire: Team;
+
+    private bestMatchup: Array<Player> = [];
+
+    private bestMmrDifference: number;
 
 
     private constructor(players?: Array<Player>) {
@@ -38,6 +42,7 @@ export class TeamBalancer {
         for (let i: number = 0; i < 4; i++) {
             this.changePlayers(i);
         }
+        this.printCurrentResult();
     }
 
     private startTeams() {
@@ -46,11 +51,12 @@ export class TeamBalancer {
         this.dire = new Team();
         this.shuffleTeams();
         this.sortPlayersByMmr();
-        this.printCurrentResult();
+        this.bestMmrDifference = this.calculateMmrDiff();
+        this.bestMatchup = [...this.radiant.getPlayers(), ...this.dire.getPlayers()];
     }
     private shuffleTeams(): void {
         console.log("Shuffling teams.");
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 100000; i++) {
             let randomPositionOne: number = Math.floor(Math.random() * 10);
             let randomPositionTwo: number = Math.floor(Math.random() * 10);
             let auxPlayer: Player = this.players[randomPositionOne];
@@ -68,7 +74,7 @@ export class TeamBalancer {
 
     private printCurrentResult(): void {
         console.log("******************************")
-        console.log("Radiant: ", this.radiant.getPlayers(), " Dire: ", this.dire.getPlayers(), " MMR Difference: ", this.calculateMmrDiff());
+        console.log("Radiant: ", this.bestMatchup.slice(0, 5), " Dire: ", this.bestMatchup.slice(5), " MMR Difference: ", this.bestMmrDifference);
     }
 
     private calculateMmrDiff(): number {
@@ -81,18 +87,23 @@ export class TeamBalancer {
 
     private changePlayers(position: number, revertAtEnd: boolean = false): void {
         const aux: Player = this.radiant.getPlayer(position);
-        console.log("Trocando Player ", aux, " pelo Player ", this.dire.getPlayer(position));
         this.radiant.setPlayer(position, this.dire.getPlayer(position));
         this.dire.setPlayer(position, aux);
-        this.printCurrentResult();
+        this.verifyMatchup();
         if (revertAtEnd) {
             this.revertChangedPlayer(position);
         }
     }
 
     private revertChangedPlayer(position: number): void {
-        console.log("Revertendo troca");
         this.changePlayers(position);
+    }
+
+    private verifyMatchup(): void {
+        if (this.calculateMmrDiff() < this.bestMmrDifference) {
+            this.bestMmrDifference = this.calculateMmrDiff();
+            this.bestMatchup = [...this.radiant.getPlayers(), ...this.dire.getPlayers()];
+        }
     }
 
 }
