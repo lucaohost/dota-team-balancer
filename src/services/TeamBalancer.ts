@@ -1,3 +1,4 @@
+import { Matchup } from "../models/Matchup";
 import { Player } from "../models/Player";
 import { Team } from "../models/Team";
 
@@ -11,9 +12,7 @@ export class TeamBalancer {
 
     private dire: Team;
 
-    private bestMatchup: Array<Player> = [];
-
-    private bestMmrDifference: number;
+    private matchups: Array<Matchup> = [];
 
 
     private constructor(players?: Array<Player>) {
@@ -42,17 +41,17 @@ export class TeamBalancer {
         for (let i: number = 0; i < 4; i++) {
             this.changePlayers(i);
         }
+        this.sortMatchups();
         this.printResult();
     }
 
     private startTeams() {
         console.log("Creating teams.");
-        this.radiant = new Team();
-        this.dire = new Team();
+        this.radiant = new Team([]);
+        this.dire = new Team([]);
         this.shuffleTeams();
         this.sortPlayersByMmr();
-        this.bestMmrDifference = this.calculateMmrDiff();
-        this.bestMatchup = [...this.radiant.getPlayers(), ...this.dire.getPlayers()];
+        this.matchups.push(new Matchup(this.radiant, this.dire));
     }
     private shuffleTeams(): void {
         console.log("Shuffling teams.");
@@ -73,12 +72,11 @@ export class TeamBalancer {
     }
 
     private printResult(): void {
-        console.log("******************************")
-        console.log("Radiant: ", this.bestMatchup.slice(0, 5), " Dire: ", this.bestMatchup.slice(5), " MMR Difference: ", this.bestMmrDifference);
-    }
-
-    private calculateMmrDiff(): number {
-        return Math.abs(this.radiant.calculateTeamMmr() - this.dire.calculateTeamMmr());
+        this.matchups.forEach((matchup:Matchup, index:number) => {
+            console.log("*****************************");
+            console.log("Game ", index + 1);
+            console.log("Radiant: ", matchup.getRadiantTeam(), " Dire: ", matchup.getDireTeam(), " MMR Difference: ", matchup.getMmrDifference());
+        });
     }
 
     private changePlayersAndRevert(position: number) {
@@ -89,7 +87,7 @@ export class TeamBalancer {
         const aux: Player = this.radiant.getPlayer(position);
         this.radiant.setPlayer(position, this.dire.getPlayer(position));
         this.dire.setPlayer(position, aux);
-        this.verifyMatchup();
+        this.matchups.push(new Matchup(this.radiant, this.dire));
         if (revertAtEnd) {
             this.revertChangedPlayer(position);
         }
@@ -99,11 +97,8 @@ export class TeamBalancer {
         this.changePlayers(position);
     }
 
-    private verifyMatchup(): void {
-        if (this.calculateMmrDiff() < this.bestMmrDifference) {
-            this.bestMmrDifference = this.calculateMmrDiff();
-            this.bestMatchup = [...this.radiant.getPlayers(), ...this.dire.getPlayers()];
-        }
+    private sortMatchups(): void {
+        this.matchups.sort((matchupOne, matchupTwo) => matchupOne.getMmrDifference() - matchupTwo.getMmrDifference());
     }
 
 }
