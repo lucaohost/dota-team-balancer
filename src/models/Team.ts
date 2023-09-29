@@ -4,6 +4,10 @@ export class Team {
 
     private players: Array<Player> = new Array<Player>();
 
+    constructor(players: Array<Player>) {
+        this.players = players;
+    }
+
     public getPlayers(): Array<Player> {
         return this.players;
     }
