@@ -8,9 +8,9 @@ export class TeamBalancer {
 
     private players: Array<Player> = [];
 
-    private radiant: Team;
+    private radiant: Team = new Team([]);
 
-    private dire: Team;
+    private dire: Team = new Team([]);
 
     private matchups: Array<Matchup> = [];
 
@@ -47,8 +47,6 @@ export class TeamBalancer {
 
     private startTeams() {
         console.log("Creating teams.");
-        this.radiant = new Team([]);
-        this.dire = new Team([]);
         this.shuffleTeams();
         this.sortPlayersByMmr();
         this.matchups.push(new Matchup(this.radiant, this.dire));
