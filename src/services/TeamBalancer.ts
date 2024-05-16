@@ -38,7 +38,8 @@ export class TeamBalancer {
         for (let i: number = 0; i < 5; i++) {
             this.changePlayersAndRevert(i);
         }
-        for (let i: number = 0; i < 4; i++) {
+        this.onlyChangePlayers(0);
+        for (let i: number = 1; i < 3; i++) {
             this.changePlayers(i);
         }
         this.sortMatchups();
@@ -82,17 +83,17 @@ export class TeamBalancer {
     }
 
     private changePlayers(position: number, revertAtEnd: boolean = false): void {
-        const aux: Player = this.radiant.getPlayer(position);
-        this.radiant.setPlayer(position, this.dire.getPlayer(position));
-        this.dire.setPlayer(position, aux);
+        this.onlyChangePlayers(position);
         this.matchups.push(new Matchup(this.radiant, this.dire));
         if (revertAtEnd) {
-            this.revertChangedPlayer(position);
+            this.onlyChangePlayers(position);
         }
     }
 
-    private revertChangedPlayer(position: number): void {
-        this.changePlayers(position);
+    private onlyChangePlayers(position: number) {
+        const aux: Player = this.radiant.getPlayer(position);
+        this.radiant.setPlayer(position, this.dire.getPlayer(position));
+        this.dire.setPlayer(position, aux);
     }
 
     private sortMatchups(): void {
