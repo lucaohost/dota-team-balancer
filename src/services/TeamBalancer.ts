@@ -72,7 +72,7 @@ export class TeamBalancer {
     }
 
     private async printResult(): Promise<void> {
-        console.log("Trying to find matchup with MMR difference less than 300 and different previous games.");
+        console.log("Trying to find matchup with MMR difference less than 300 and different previous matchups.");
         let foundMatchup: boolean = false;
         for (let matchup of this.matchups) {
             if (matchup.getMmrDifference() < 300 && await this.uniqueMatchup(matchup)) {
