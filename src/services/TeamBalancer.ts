@@ -1,6 +1,7 @@
 import { Matchup } from "../models/Matchup";
 import { Player } from "../models/Player";
 import { Team } from "../models/Team";
+import * as fs from 'fs/promises';
 
 export class TeamBalancer {
 
@@ -14,6 +15,7 @@ export class TeamBalancer {
 
     private matchups: Array<Matchup> = [];
 
+    private previousMatchups: Array<Matchup> = [];
 
     private constructor(players?: Array<Player>) {
         this.setPlayers(players);
@@ -33,7 +35,7 @@ export class TeamBalancer {
         this.players = players;
     }
 
-    public balance(): void {
+    public async balance(): Promise<void> {
         this.startTeams();
         for (let i: number = 0; i < 5; i++) {
             this.changePlayersAndRevert(i);
@@ -47,13 +49,12 @@ export class TeamBalancer {
     }
 
     private startTeams() {
-        console.log("Creating teams.");
+        console.log("Creating and shuffling teams.");
         this.shuffleTeams();
         this.sortPlayersByMmr();
         this.matchups.push(new Matchup(this.radiant, this.dire));
     }
     private shuffleTeams(): void {
-        console.log("Shuffling teams.");
         for (let i = 0; i < 1000; i++) {
             let randomPositionOne: number = Math.floor(Math.random() * 10);
             let randomPositionTwo: number = Math.floor(Math.random() * 10);
@@ -70,12 +71,34 @@ export class TeamBalancer {
         this.dire.sortPlayers();
     }
 
-    private printResult(): void {
-        this.matchups.forEach((matchup:Matchup, index:number) => {
-            console.log("*****************************");
-            console.log("Game ", index + 1);
-            console.log("Radiant: ", matchup.getRadiantTeam(), " Dire: ", matchup.getDireTeam(), " MMR Difference: ", matchup.getMmrDifference());
-        });
+    private async printResult(): Promise<void> {
+        console.log("Trying to find matchup with MMR difference less than 300 and different previous games.");
+        let foundMatchup: boolean = false;
+        for (let matchup of this.matchups) {
+            if (matchup.getMmrDifference() < 300 && await this.uniqueMatchup(matchup)) {
+                console.log("*****************************");
+                console.log("Radiant: ", matchup.getRadiantTeam(), " Dire: ", matchup.getDireTeam(), " MMR Difference: ", matchup.getMmrDifference());
+                foundMatchup = true;
+                console.log("*****************************");
+                console.log("Saving matchup to not repeat.")
+                this.saveMatchup(matchup);
+                break;
+            }
+        }
+        if (!foundMatchup) {
+            console.log("Couldn't find matchup. Trying again...");
+            this.balance();
+        }
+    }
+
+    private async uniqueMatchup(matchup: Matchup): Promise<boolean> {
+        this.previousMatchups = await this.loadJsonFile();
+        for (let previousMatchup of this.previousMatchups) {
+            if (matchup.getDireTeam().equals(previousMatchup.dire) || matchup.getDireTeam().equals(previousMatchup.radiant)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private changePlayersAndRevert(position: number) {
@@ -84,6 +107,8 @@ export class TeamBalancer {
 
     private changePlayers(position: number, revertAtEnd: boolean = false): void {
         this.onlyChangePlayers(position);
+        this.radiant.sortPlayers();
+        this.dire.sortPlayers();
         this.matchups.push(new Matchup(this.radiant, this.dire));
         if (revertAtEnd) {
             this.onlyChangePlayers(position);
@@ -98,6 +123,33 @@ export class TeamBalancer {
 
     private sortMatchups(): void {
         this.matchups.sort((matchupOne, matchupTwo) => matchupOne.getMmrDifference() - matchupTwo.getMmrDifference());
+    }
+
+    private async saveMatchup(matchup: Matchup) {
+        try {
+            matchup.getDireTeam().sortPlayers();
+            matchup.getRadiantTeam().sortPlayers();
+            this.previousMatchups.push(matchup);
+            const jsonString = JSON.stringify(this.previousMatchups, null, 2);
+            await fs.writeFile('./data/previousMatchups.json', jsonString, 'utf-8');
+            console.log('Matchup saved.');
+        } catch (err) {
+            console.error('Error saving matchup.', err);
+        }
+    }
+
+    private async loadJsonFile(): Promise<Matchup[]> {
+        try {
+            const data = await fs.readFile('./data/previousMatchups.json', 'utf-8');
+            if (data.trim().length === 0) {
+                console.log("No previous matchups detected.");
+                return [];
+            }
+            return JSON.parse(data) as Array<Matchup>;
+        } catch (err) {
+            console.error('Error reading or parsing file', err);
+            throw err;
+        }
     }
 
 }

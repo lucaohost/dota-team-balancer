@@ -2,7 +2,7 @@ import { Player } from "./Player";
 
 export class Team {
 
-    private players: Array<Player> = new Array<Player>();
+    public players: Array<Player> = new Array<Player>();
 
     constructor(players: Array<Player>) {
         this.players = players;
@@ -37,6 +37,10 @@ export class Team {
             totalTeamMmr += player.getMmr();
         });
         return totalTeamMmr;
+    }
+
+    public equals(team: Object) {
+        return JSON.stringify(this) === JSON.stringify(team);
     }
 
 }

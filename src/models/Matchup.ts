@@ -2,9 +2,9 @@ import { Team } from "./Team";
 
 export class Matchup {
 
-    private radiant: Team;
+    public radiant: Team;
 
-    private dire: Team;
+    public dire: Team;
 
     private mmrDifference: number;
 
@@ -13,7 +13,6 @@ export class Matchup {
         this.dire = new Team([...dire.getPlayers()]);
         this.mmrDifference = Math.abs(this.radiant.calculateTeamMmr() - this.dire.calculateTeamMmr());
     }
-
 
     public getRadiantTeam(): Team {
         return this.radiant;
