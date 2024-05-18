@@ -49,7 +49,7 @@ export class TeamBalancer {
     }
 
     private startTeams() {
-        console.log("Creating and shuffling teams.");
+        console.log("* Creating and shuffling teams.");
         this.shuffleTeams();
         this.sortPlayersByMmr();
         this.matchups.push(new Matchup(this.radiant, this.dire));
@@ -72,21 +72,25 @@ export class TeamBalancer {
     }
 
     private async printResult(): Promise<void> {
-        console.log("Trying to find matchup with MMR difference less than 300 and different previous matchups.");
+        console.log("* Finding MMR difference < 300 and unique matchup.");
         let foundMatchup: boolean = false;
         for (let matchup of this.matchups) {
             if (matchup.getMmrDifference() < 300 && await this.uniqueMatchup(matchup)) {
+                console.log("* Matchup found!")
+                await this.countdown(3);
+                console.log("*****************************");
+                console.log("Game " + (this.previousMatchups.length + 1))
                 console.log("*****************************");
                 console.log("Radiant: ", matchup.getRadiantTeam(), " Dire: ", matchup.getDireTeam(), " MMR Difference: ", matchup.getMmrDifference());
                 foundMatchup = true;
                 console.log("*****************************");
-                console.log("Saving matchup to not repeat.")
+                console.log("* Saving matchup to not repeat.")
                 this.saveMatchup(matchup);
                 break;
             }
         }
         if (!foundMatchup) {
-            console.log("Couldn't find matchup. Trying again...");
+            console.log("* Couldn't find matchup. Trying again...");
             this.balance();
         }
     }
@@ -132,7 +136,7 @@ export class TeamBalancer {
             this.previousMatchups.push(matchup);
             const jsonString = JSON.stringify(this.previousMatchups, null, 2);
             await fs.writeFile('./data/previousMatchups.json', jsonString, 'utf-8');
-            console.log('Matchup saved.');
+            console.log('* Matchup saved.');
         } catch (err) {
             console.error('Error saving matchup.', err);
         }
@@ -142,7 +146,7 @@ export class TeamBalancer {
         try {
             const data = await fs.readFile('./data/previousMatchups.json', 'utf-8');
             if (data.trim().length === 0) {
-                console.log("No previous matchups detected.");
+                console.log("* No previous matchups detected.");
                 return [];
             }
             return JSON.parse(data) as Array<Matchup>;
@@ -152,4 +156,20 @@ export class TeamBalancer {
         }
     }
 
+    private countdown(seconds: number): Promise<void> {
+        return new Promise((resolve) => {
+            const interval = setInterval(() => {
+                if (seconds !== 0) {
+                    console.log("* " + seconds);
+                }
+                seconds--;
+                if (seconds < 0) {
+                    clearInterval(interval);
+                    resolve();
+                }
+            }, 1000);
+        });
+    }
+
 }
+
