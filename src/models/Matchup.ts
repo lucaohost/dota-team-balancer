@@ -6,7 +6,7 @@ export class Matchup {
 
     public dire: Team;
 
-    private mmrDifference: number;
+    public mmrDifference: number;
 
     public constructor(radiant: Team, dire: Team) {
         this.radiant = new Team([...radiant.getPlayers()]);
