@@ -1,4 +1,5 @@
 # Dota Team Balancer
+CLI Matchup Generator for Amateur DOTA 2 Championships.
 
 ## Usage
 - In the folder /mnt/c/git/dota-team-balancer, run:
