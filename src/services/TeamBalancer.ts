@@ -129,10 +129,15 @@ export class TeamBalancer {
         console.log("* Removing matchup to not repeat.");
         await this.saveMatchups(selectedMatchups);
         await this.countdown(3);
+        const gameNumber = 10 - selectedMatchups.length;
         console.log("*****************************");
-        console.log("Game " + (10 - selectedMatchups.length));
+        console.log(`Game ${gameNumber}`);
         console.log("*****************************");
-        console.log("Radiant: ", matchup?.radiant, " Dire: ", matchup?.dire, " MMR Difference: ", matchup?.mmrDifference);
+        if (gameNumber % 2 === 0) { // It avoids lower ids to be always radiant
+            console.log("Radiant: ", matchup?.radiant, " Dire: ", matchup?.dire, " MMR Difference: ", matchup?.mmrDifference);
+        } else {
+            console.log("Radiant: ", matchup?.dire, " Dire: ", matchup?.radiant, " MMR Difference: ", matchup?.mmrDifference);
+        }
         console.log("*****************************");
     }
 
