@@ -43,4 +43,15 @@ export class Team {
         return JSON.stringify(this) === JSON.stringify(team);
     }
 
+    
+    public overlapWith(otherTeam: Team): number {
+        let overlapCount = 0;
+        for (const player of this.players) {
+            if (otherTeam.getPlayers().some(otherPlayer => otherPlayer.getName() === player.getName())) {
+                overlapCount++;
+            }
+        }
+        return overlapCount;
+    }
+
 }

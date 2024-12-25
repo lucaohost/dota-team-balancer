@@ -9,14 +9,6 @@ export class TeamBalancer {
 
     private players: Array<Player> = [];
 
-    private radiant: Team = new Team([]);
-
-    private dire: Team = new Team([]);
-
-    private matchups: Array<Matchup> = [];
-
-    private previousMatchups: Array<Matchup> = [];
-
     private constructor(players?: Array<Player>) {
         this.setPlayers(players);
     }
@@ -36,140 +28,88 @@ export class TeamBalancer {
     }
 
     public async balance(): Promise<void> {
-        this.startTeams();
-        for (let i: number = 0; i < 5; i++) {
-            this.changePlayersAndRevert(i);
-        }
-        this.onlyChangePlayers(0);
-        for (let i: number = 1; i < 3; i++) {
-            this.changePlayers(i);
-        }
-        this.sortMatchups();
-        this.printResult();
-    }
+        console.log("* Evaluating all possible team combinations.");
 
-    private startTeams() {
-        console.log("* Creating and shuffling teams.");
-        this.shuffleTeams();
-        this.sortPlayersByMmr();
-        this.matchups.push(new Matchup(this.radiant, this.dire));
-    }
-    private shuffleTeams(): void {
-        for (let i = 0; i < 1000; i++) {
-            let randomPositionOne: number = Math.floor(Math.random() * 10);
-            let randomPositionTwo: number = Math.floor(Math.random() * 10);
-            let auxPlayer: Player = this.players[randomPositionOne];
-            this.players[randomPositionOne] = this.players[randomPositionTwo];
-            this.players[randomPositionTwo] = auxPlayer;
-        }
-        this.radiant.setPlayers(this.players.slice(0, 5));
-        this.dire.setPlayers(this.players.slice(5));
-    }
+        // Generate all possible team combinations.
+        const combinations = this.generateCombinations();
 
-    private sortPlayersByMmr(): void {
-        this.radiant.sortPlayers();
-        this.dire.sortPlayers();
-    }
-
-    private async printResult(): Promise<void> {
-        console.log("* Finding MMR difference < 300 and unique matchup.");
-        let foundMatchup: boolean = false;
-        for (let matchup of this.matchups) {
-            if (matchup.getMmrDifference() < 300 && await this.uniqueMatchup(matchup)) {
-                console.log("* Matchup found!")
-                await this.countdown(3);
-                console.log("*****************************");
-                console.log("Game " + (this.previousMatchups.length + 1))
-                console.log("*****************************");
-                console.log("Radiant: ", matchup.getRadiantTeam(), " Dire: ", matchup.getDireTeam(), " MMR Difference: ", matchup.getMmrDifference());
-                foundMatchup = true;
-                console.log("*****************************");
-                console.log("* Saving matchup to not repeat.")
-                this.saveMatchup(matchup);
-                break;
-            }
-        }
-        if (!foundMatchup) {
-            console.log("* Couldn't find matchup. Trying again...");
-            this.balance();
-        }
-    }
-
-    private async uniqueMatchup(matchup: Matchup): Promise<boolean> {
-        this.previousMatchups = await this.loadJsonFile();
-        for (let previousMatchup of this.previousMatchups) {
-            if (matchup.getDireTeam().equals(previousMatchup.dire) || matchup.getDireTeam().equals(previousMatchup.radiant)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private changePlayersAndRevert(position: number) {
-        this.changePlayers(position, true);
-    }
-
-    private changePlayers(position: number, revertAtEnd: boolean = false): void {
-        this.onlyChangePlayers(position);
-        this.radiant.sortPlayers();
-        this.dire.sortPlayers();
-        this.matchups.push(new Matchup(this.radiant, this.dire));
-        if (revertAtEnd) {
-            this.onlyChangePlayers(position);
-        }
-    }
-
-    private onlyChangePlayers(position: number) {
-        const aux: Player = this.radiant.getPlayer(position);
-        this.radiant.setPlayer(position, this.dire.getPlayer(position));
-        this.dire.setPlayer(position, aux);
-    }
-
-    private sortMatchups(): void {
-        this.matchups.sort((matchupOne, matchupTwo) => matchupOne.getMmrDifference() - matchupTwo.getMmrDifference());
-    }
-
-    private async saveMatchup(matchup: Matchup) {
-        try {
-            matchup.getDireTeam().sortPlayers();
-            matchup.getRadiantTeam().sortPlayers();
-            this.previousMatchups.push(matchup);
-            const jsonString = JSON.stringify(this.previousMatchups, null, 2);
-            await fs.writeFile('./data/previousMatchups.json', jsonString, 'utf-8');
-            console.log('* Matchup saved.');
-        } catch (err) {
-            console.error('Error saving matchup.', err);
-        }
-    }
-
-    private async loadJsonFile(): Promise<Matchup[]> {
-        try {
-            const data = await fs.readFile('./data/previousMatchups.json', 'utf-8');
-            if (data.trim().length === 0) {
-                console.log("* No previous matchups detected.");
-                return [];
-            }
-            return JSON.parse(data) as Array<Matchup>;
-        } catch (err) {
-            console.error('Error reading or parsing file', err);
-            throw err;
-        }
-    }
-
-    private countdown(seconds: number): Promise<void> {
-        return new Promise((resolve) => {
-            const interval = setInterval(() => {
-                if (seconds !== 0) {
-                    console.log("* " + seconds);
-                }
-                seconds--;
-                if (seconds < 0) {
-                    clearInterval(interval);
-                    resolve();
-                }
-            }, 1000);
+        // Create matchups from the combinations.
+        const matchups = combinations.map(([radiantPlayers, direPlayers]) => {
+            const radiant = new Team(radiantPlayers);
+            const dire = new Team(direPlayers);
+            return new Matchup(radiant, dire);
         });
+
+        console.log("* Sorting matchups by MMR difference.");
+        matchups.sort((a, b) => a.getMmrDifference() - b.getMmrDifference());
+
+        console.log("* Filtering matchups to ensure at least 2 different players between teams.");
+        const uniqueMatchups = matchups.filter((matchup, _, allMatchups) => this.hasTwoDifferentPlayers(matchup, allMatchups));
+
+        console.log("* Selecting the 10 best matchups.");
+        const selectedMatchups = uniqueMatchups.slice(0, 10);
+
+        console.log("* Saving selected matchups to matchups.json.");
+        await this.saveMatchups(selectedMatchups);
+
+        console.log("* Matchup balancing completed.");
     }
 
-}
+    private generateCombinations(): [Player[], Player[]][] {
+        const combinations: [Player[], Player[]][] = [];
+        const totalPlayers = this.players.length;
 
+        // Create an array of indices corresponding to the players.
+        const indices = Array.from({ length: totalPlayers }, (_, i) => i);
+
+        // Helper function to generate combinations of a certain size (k).
+        const getCombinations = (arr: number[], k: number): number[][] => {
+            if (k === 0) return [[]]; // Base case: one combination of size 0 (empty set).
+            if (arr.length === 0) return []; // No combinations possible if array is empty.
+            const [first, ...rest] = arr;
+            const withFirst = getCombinations(rest, k - 1).map(comb => [first, ...comb]);
+            const withoutFirst = getCombinations(rest, k);
+            return [...withFirst, ...withoutFirst];
+        };
+
+        // Generate all combinations of 5 players for the radiant team.
+        const radiantCombinations = getCombinations(indices, totalPlayers / 2);
+
+        for (const radiantIndices of radiantCombinations) {
+            // Map indices to players for radiant and dire teams.
+            const radiantPlayers = radiantIndices.map(index => this.players[index]);
+            const direPlayers = this.players.filter((_, index) => !radiantIndices.includes(index));
+
+            // Add the combination as a pair of radiant and dire teams.
+            combinations.push([radiantPlayers, direPlayers]);
+        }
+
+        return combinations;
+    }
+
+    private hasTwoDifferentPlayers(currentMatchup: Matchup, allMatchups: Matchup[]): boolean {
+        for (const otherMatchup of allMatchups) {
+            // Check the overlap of players in both teams.
+            const radiantOverlap = currentMatchup.getRadiantTeam().overlapWith(otherMatchup.getRadiantTeam());
+            const direOverlap = currentMatchup.getDireTeam().overlapWith(otherMatchup.getDireTeam());
+
+            // Ensure at least two different players across both teams.
+            if ((radiantOverlap < 4 && direOverlap < 4) || (radiantOverlap + direOverlap <= 8)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private async saveMatchups(matchups: Matchup[]): Promise<void> {
+        try {
+            // Convert matchups to JSON format for saving.
+            // const jsonString = JSON.stringify(matchups.map(matchup => matchup.toJSON()), null, 2);
+            const jsonString = JSON.stringify(matchups);
+            await fs.writeFile('/mnt/c/git/dota-team-balancer/src/data/matchups.json', jsonString, 'utf-8');
+            console.log('* Matchups saved successfully.');
+        } catch (err) {
+            console.error('Error saving matchups.', err);
+        }
+    }
+}
