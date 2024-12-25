@@ -1,4 +1,4 @@
-# dota-team-balancer
+# Dota Team Balancer
 
 ## Usage
 - In the folder /mnt/c/git/dota-team-balancer, run:
