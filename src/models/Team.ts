@@ -54,4 +54,8 @@ export class Team {
         return overlapCount;
     }
 
+    public toString(): string {
+        return JSON.stringify(this);
+    }
+
 }

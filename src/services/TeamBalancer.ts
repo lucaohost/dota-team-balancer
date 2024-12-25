@@ -29,6 +29,17 @@ export class TeamBalancer {
 
     public async balance(): Promise<void> {
         console.log("* Evaluating all possible team combinations.");
+        try {
+            const data = await fs.readFile('/mnt/c/git/dota-team-balancer/src/data/matchups.json', 'utf-8');
+            const matchups = JSON.parse(data);
+            if (matchups.length > 0) {
+                await this.printResults(matchups);
+                return;
+            }
+        } catch (err) {
+            console.log("* Error reading matchups file: ", err);
+            return;
+        }
 
         // Generate all possible team combinations.
         const combinations = this.generateCombinations();
@@ -40,19 +51,19 @@ export class TeamBalancer {
             return new Matchup(radiant, dire);
         });
 
-        console.log("* Sorting matchups by MMR difference.");
+        // Sorting matchups by MMR difference.
         matchups.sort((a, b) => a.getMmrDifference() - b.getMmrDifference());
 
-        console.log("* Filtering matchups to ensure at least 2 different players between teams.");
+        // Filtering matchups to ensure at least 2 different players between teams.
         const uniqueMatchups = matchups.filter((matchup, _, allMatchups) => this.hasTwoDifferentPlayers(matchup, allMatchups));
 
-        console.log("* Selecting the 10 best matchups.");
+        // Selecting the 10 best matchups.
         const selectedMatchups = uniqueMatchups.slice(0, 10);
 
-        console.log("* Saving selected matchups to matchups.json.");
         await this.saveMatchups(selectedMatchups);
 
-        console.log("* Matchup balancing completed.");
+        await this.printResults(selectedMatchups);
+
     }
 
     private generateCombinations(): [Player[], Player[]][] {
@@ -121,4 +132,34 @@ export class TeamBalancer {
             console.error('Error saving matchups.', err);
         }
     }
+
+    private async printResults(selectedMatchups: Matchup[]): Promise<void> {
+        console.log("* Picking matchup with less MMR difference.");
+        const matchup = selectedMatchups.shift();
+        console.log("* Matchup found!")
+        console.log("* Removing matchup to not repeat.");
+        await fs.writeFile('/mnt/c/git/dota-team-balancer/src/data/matchups.json', JSON.stringify(selectedMatchups, null, 2), 'utf-8');
+        await this.countdown(3);
+        console.log("*****************************");
+        console.log("Game " + (10 - selectedMatchups.length))
+        console.log("*****************************");
+        console.log("Radiant: ", matchup?.radiant, " Dire: ", matchup?.dire, " MMR Difference: ", matchup?.mmrDifference);
+        console.log("*****************************");
+    }
+
+    private countdown(seconds: number): Promise<void> {
+        return new Promise((resolve) => {
+            const interval = setInterval(() => {
+                if (seconds !== 0) {
+                    console.log("* " + seconds);
+                }
+                seconds--;
+                if (seconds < 0) {
+                    clearInterval(interval);
+                    resolve();
+                }
+            }, 1000);
+        });
+    }
+
 }
