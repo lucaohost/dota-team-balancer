@@ -58,6 +58,7 @@ export class TeamBalancer {
     private generateCombinations(): [Player[], Player[]][] {
         const combinations: [Player[], Player[]][] = [];
         const totalPlayers = this.players.length;
+        let teamGenerated = [];
 
         // Create an array of indices corresponding to the players.
         const indices = Array.from({ length: totalPlayers }, (_, i) => i);
@@ -80,10 +81,18 @@ export class TeamBalancer {
             const radiantPlayers = radiantIndices.map(index => this.players[index]);
             const direPlayers = this.players.filter((_, index) => !radiantIndices.includes(index));
 
-            // Add the combination as a pair of radiant and dire teams.
-            combinations.push([radiantPlayers, direPlayers]);
-        }
+            // Ensure unique matchups by sorting and checking for duplicates.
+            const radiantSorted = radiantPlayers.slice().sort((a, b) => a.getId() - b.getId());
+            const direSorted = direPlayers.slice().sort((a, b) => a.getId() - b.getId());
+            const matchupKey = JSON.stringify([radiantSorted, direSorted]);
+            const reverseKey = JSON.stringify([direSorted, radiantSorted]);
 
+            if (teamGenerated[matchupKey] === undefined && teamGenerated[reverseKey] === undefined) {
+                teamGenerated[matchupKey] = true;
+                teamGenerated[reverseKey] = true;
+                combinations.push([radiantPlayers, direPlayers]);
+            }
+        }
         return combinations;
     }
 
